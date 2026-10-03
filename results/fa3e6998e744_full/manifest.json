@@ -1,0 +1,150 @@
+{
+  "cache_tag": "d1bda8679401",
+  "data_hash": "1c6bcba0a0e2",
+  "file_sha256": {
+    "TB3MS.csv": "631bc444a8c5370c3a2df12f484a67ae7b9a68c00fe8a33215895fb49c8cc08c",
+    "sp500_historical_components.csv": "36326709d46d6cd25834de5df457b16f5f96fad3a06b9beac28f7b88aa0b0d54"
+  },
+  "quick": null,
+  "quick_run": false,
+  "run_tag": "fa3e6998e744_full",
+  "settings": {
+    "acf_max_lag": 6,
+    "baseline_rebalance_months": 3,
+    "code_version": 1,
+    "constituents_url": "https://raw.githubusercontent.com/fja05680/sp500/a2430f2af0c79ddf0748e91de11bdeb1616ab5a7/S%26P%20500%20Historical%20Components%20%26%20Changes%20(Updated).csv",
+    "cost_per_side": 0.001,
+    "curve_draws": 1000,
+    "curve_ns": [
+      1,
+      2,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500,
+      1116
+    ],
+    "download_end": "2026-01-01",
+    "download_start": "2004-12-01",
+    "embargo_months": 12,
+    "feature_names": [
+      "mom12_1",
+      "mom3",
+      "rev1",
+      "vol6",
+      "size"
+    ],
+    "feature_transform": "cs_rank",
+    "grid": {
+      "h": [
+        1,
+        3,
+        6
+      ],
+      "max_depth": [
+        2,
+        4,
+        8
+      ],
+      "min_samples_leaf": [
+        1,
+        50
+      ],
+      "q": [
+        3,
+        5
+      ]
+    },
+    "heldout_end": "2025-12",
+    "heldout_start": "2018-01",
+    "history_start": "2005-01",
+    "k_folds": 6,
+    "min_coverage": 0.99,
+    "n_stocks": 40,
+    "pbo_blocks": 12,
+    "placebo_reps": 10,
+    "rf": {
+      "bootstrap": true,
+      "class_weight": null,
+      "max_features": "sqrt",
+      "n_estimators": 200
+    },
+    "seed": 20261003,
+    "train_end": "2017-12",
+    "train_start": "2006-01",
+    "universe_date": "2005-01-01",
+    "universe_exclude": [],
+    "universe_overrides": {
+      "ABC": "COR",
+      "ANTM": "ELV",
+      "ARNC": "HWM",
+      "BK": "BNY",
+      "BLL": "BALL",
+      "CTL": "LUMN",
+      "FII": "FHI",
+      "GPS": "GAP",
+      "MMC": "MRSH",
+      "NCR": "VYX",
+      "PKI": "RVTY",
+      "SYMC": "GEN",
+      "TMK": "GL",
+      "UTX": "RTX"
+    }
+  },
+  "tickers": [
+    "MSFT",
+    "INTC",
+    "AAPL",
+    "XOM",
+    "CSCO",
+    "EBAY",
+    "PFE",
+    "GE",
+    "C",
+    "VLO",
+    "WMT",
+    "AMGN",
+    "QCOM",
+    "AIG",
+    "ORCL",
+    "IBM",
+    "BAC",
+    "MO",
+    "JNJ",
+    "CVX",
+    "PG",
+    "COP",
+    "AMAT",
+    "GS",
+    "JPM",
+    "TXN",
+    "SLB",
+    "GEN",
+    "HAL",
+    "MSI",
+    "MS",
+    "HD",
+    "HPQ",
+    "MRK",
+    "VZ",
+    "JCI",
+    "UNH",
+    "CMCSA",
+    "AXP",
+    "T"
+  ],
+  "versions": {
+    "joblib": "1.4.0",
+    "matplotlib": "3.8.4",
+    "numpy": "2.2.6",
+    "pandas": "3.0.2",
+    "platform": "Windows-10-10.0.19045-SP0",
+    "python": "3.12.2",
+    "scipy": "1.13.0",
+    "sklearn": "1.4.2",
+    "yfinance": "1.7.0"
+  }
+}
