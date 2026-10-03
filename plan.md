@@ -97,7 +97,7 @@ La purged K-fold con embargo resuelve el **leakage**, pero no resuelve el **sesg
 
 ## Selección: dos criterios a comparar
 
-- **Selección principal (la de la tesis):** la mejor por Sharpe CV entre las 1116 configuraciones, por separado para LS y para LO. Es el criterio natural para el DSR y la PBO, porque optimiza directamente la métrica que se reporta.
+- **Selección principal (la de la tesis):** la mejor por Sharpe CV entre las 1116 configuraciones, por separado para LS y para LO. En el LO, además, se elige la de mayor information ratio contra 1/N (ver "LO contra 1/N"). Es el criterio natural para el DSR y la PBO, porque optimiza directamente la métrica que se reporta.
 - **Comparación de criterios, dentro de cada grupo (h, cuantil):** en cada uno de los 6 grupos (186 configuraciones) se elige la mejor por Sharpe CV y la mejor por AUC CV.
   - El AUC se compara solo dentro de un grupo porque predecir el tercil superior a 1 mes y el quintil superior a 6 meses son problemas distintos, con AUCs que no se pueden comparar.
   - Para que la comparación sea justa, la selección por Sharpe de esta parte también se hace dentro de cada grupo.
@@ -120,13 +120,13 @@ $$
 donde $\gamma \approx 0.5772$ es la constante de Euler-Mascheroni y $\hat\gamma_3, \hat\gamma_4$ son la asimetría y la curtosis de los retornos.
 
 - **Qué Sharpe entra:** el Sharpe CV de la elegida (train), mensual y sin anualizar, con $T = 144$.
-- **Qué N y qué varianza:** N es la cantidad de configuraciones entre las que se eligió, y $V[\widehat{SR}_n]$ es la varianza de sus Sharpe CV. En la selección principal son las 1116 de LS (o las de LO); en la comparación de criterios, las 186 del grupo.
+- **Qué N y qué varianza:** $V[\widehat{SR}_n]$ es la varianza de los Sharpe CV de las configuraciones entre las que se eligió: en la selección principal, las 1116 de LS, de LO o de LO contra 1/N; en la comparación de criterios, las 186 del grupo. El $SR_0$ se calcula siempre con el N efectivo de esas configuraciones, $N_{ef} = \bar\rho + (1 - \bar\rho)\,N$ (Bailey y López de Prado, 2014), donde $\bar\rho$ es la correlación promedio entre sus series de retornos.
 - **Curtosis:** $\hat\gamma_4$ es la curtosis cruda (vale 3 para una normal). `scipy.stats.kurtosis` devuelve el exceso por defecto, así que hay que usar `fisher=False`.
 - **Autocorrelación:** con $h = 3$ o $6$, los retornos mensuales de una cartera que se mantiene quieta pueden estar autocorrelacionados. Se chequea y, si es significativa, se usa un $T$ efectivo, $T_{ef} \approx T / (1 + 2\sum_k \rho_k)$, en la línea de Lo (2002). La autocorrelación también sesga la anualización con $\sqrt{12}$.
 - **En el hold-out** hay un solo intento, así que no se calcula el DSR. Se reporta el PSR, que es el mismo estadístico con $SR_0 = 0$.
 - **Baselines:** son un solo intento ($N = 1$), así que $SR_0 = 0$ y su DSR coincide con el PSR.
 - El DSR está definido para selección por Sharpe. Para la selección por AUC se reporta igual, como referencia, pero aclarando que está mal especificado (ver la última sección).
-- Como las configuraciones están muy correlacionadas, el N efectivo es menor que N. Se puede estimar agrupando las series de retornos en clusters y reportar el DSR con los dos valores.
+- **LO contra 1/N:** el DSR del LO contra la tasa libre de riesgo no mide habilidad, porque cualquier cartera long-only gana la prima de mercado. Por eso también se elige la configuración long-only de mayor information ratio contra 1/N y se calcula su DSR sobre el retorno activo (LO − 1/N, los dos netos de costos), con su propio N efectivo y su PBO.
 
 **PBO** (CSCV) sobre la matriz de 144 meses (enero 2006 – diciembre 2017) × configuraciones, armada con los retornos OOS de la purged CV. Mide qué fracción de las veces la campeona in-sample cae debajo de la mediana out-of-sample.
 - **Bloques:** $S = 12$ bloques de 12 meses (un año calendario cada uno), lo que da $\binom{12}{6} = 924$ combinaciones IS/OOS. Como el largo de los bloques es múltiplo de 6, sus bordes coinciden con los rebalanceos para todo $h \in \{1, 3, 6\}$. Ningún bloque corta un período de tenencia, así que no hay retornos de la misma cartera a los dos lados de un borde.
@@ -171,7 +171,7 @@ donde $\gamma \approx 0.5772$ es la constante de Euler-Mascheroni y $\hat\gamma_
 ## Entregables
 
 1. Curva del máximo Sharpe CV en función de N: datos reales, placebo y $SR_0$ teórico.
-2. Tabla principal para la elegida por Sharpe (LS y LO), los baselines y, como referencia, el Sharpe promedio de las 1116 configuraciones. Columnas: Sharpe en train y en hold-out (anualizados), DSR (train), PSR (hold-out), PBO (solo para los procedimientos de selección), máxima caída, turnover y, para los long-only, information ratio contra 1/N.
+2. Tabla principal para la elegida por Sharpe (LS y LO), la elegida por information ratio contra 1/N, los baselines y, como referencia, el Sharpe promedio de las 1116 configuraciones. Columnas: Sharpe en train y en hold-out (anualizados), DSR (train), PSR (hold-out), PBO (solo para los procedimientos de selección), máxima caída, turnover y, para los long-only, information ratio contra 1/N.
 3. Tabla de comparación de criterios: por grupo (h, cuantil) y por LS/LO, la elegida por Sharpe contra la elegida por AUC, con Sharpe CV, Sharpe en hold-out, caída y PBO de cada criterio.
 4. Scatter del ranking de CV contra el ranking en hold-out, con su Spearman.
 5. Retornos acumulados en el hold-out: RF elegido contra baselines.
