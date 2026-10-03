@@ -181,7 +181,7 @@ donde $\gamma \approx 0.5772$ es la constante de Euler-Mascheroni y $\hat\gamma_
 
 - Una corrida de la grilla son $1116 \times 6 \approx 6{,}700$ entrenamientos de RF. El hold-out suma 1116 y el placebo, $10 \times 6{,}700$. En total son unos 75,000.
 - Cada entrenamiento sirve para LS, para LO y para los dos criterios de selección, porque todos usan las mismas predicciones.
-- Con 200 árboles y `n_jobs=-1` debería llevar del orden de horas. Si no alcanza, se bajan las repeticiones del placebo a 5.
+- Medido con 4 núcleos: la grilla con datos reales tarda unos 20 minutos y cada repetición del placebo unos 25 (unas 4 horas las 10). Por eso el placebo se activa a mano en el notebook (`RUN_PLACEBO = True`). Lo calculado queda en caché, así que se puede correr por partes.
 
 ## Limitaciones a mencionar
 
