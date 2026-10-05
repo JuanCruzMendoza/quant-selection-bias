@@ -1,0 +1,376 @@
+% Póster del TP final: overfitting por sesgo de selección (solo la estrategia long-short).
+%
+% Compilar con LuaLaTeX, desde esta carpeta:   latexmk -lualatex poster.tex
+% Las figuras de figuras/ se generan, desde la carpeta del repo, con:   .venv/Scripts/python poster/figuras.py
+% Todos los números salen de results/fa3e6998e744_full/ (los mismos de docs/resultados_LS.md).
+
+\documentclass[20pt, a0paper, portrait, margin=0mm, innermargin=18mm,
+               blockverticalspace=10mm, colspace=16mm, subcolspace=10mm]{tikzposter}
+
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\setmainfont{Lato}[Extension=.ttf, UprightFont=*-Regular, BoldFont=*-Bold,
+                   ItalicFont=*-Italic, BoldItalicFont=*-BoldItalic]
+\setsansfont{Lato}[Extension=.ttf, UprightFont=*-Regular, BoldFont=*-Bold,
+                   ItalicFont=*-Italic, BoldItalicFont=*-BoldItalic]
+\setmathfont{LeteSansMath.otf}  % matemática sin serifa, diseñada para acompañar a Lato
+\usepackage[spanish, es-nolayout, es-noshorthands]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usetikzlibrary{calc, patterns.meta}
+
+% ---------------------------------------------------------------- Colores (los de las figuras)
+\definecolor{azul}{HTML}{1C5CAB}        % hold-out
+\definecolor{celeste}{HTML}{86B6EF}     % validación (CV)
+\definecolor{azuloscuro}{HTML}{123F78}  % banda del título
+\definecolor{tinta}{HTML}{1F1F1D}
+\definecolor{gris}{HTML}{52514E}
+\definecolor{grisclaro}{HTML}{C3C2B7}
+\definecolor{fondo}{HTML}{EEF4FC}
+
+\definecolorstyle{TP}{}{
+    \colorlet{backgroundcolor}{white}
+    \colorlet{framecolor}{white}
+    \colorlet{titlefgcolor}{white}
+    \colorlet{titlebgcolor}{azuloscuro}
+    \colorlet{blocktitlebgcolor}{celeste}
+    \colorlet{blocktitlefgcolor}{azul}
+    \colorlet{blockbodybgcolor}{white}
+    \colorlet{blockbodyfgcolor}{tinta}
+    \colorlet{innerblocktitlebgcolor}{white}
+    \colorlet{innerblocktitlefgcolor}{azul}
+    \colorlet{innerblockbodybgcolor}{fondo}
+    \colorlet{innerblockbodyfgcolor}{tinta}
+    \colorlet{notefgcolor}{tinta}
+    \colorlet{notebgcolor}{fondo}
+    \colorlet{notefrcolor}{fondo}
+}
+\usecolorstyle{TP}
+\usebackgroundstyle{Empty}
+
+% ---------------------------------------------------------------- Título: banda de ancho completo
+\definetitlestyle{Banda}{
+    width=\paperwidth, roundedcorners=0, linewidth=0pt, innersep=18mm,
+    titletotopverticalspace=0mm, titletoblockverticalspace=12mm, titlegraphictotitledistance=0pt
+}{
+    \fill[titlebgcolor] (\titleposleft,\titleposbottom) rectangle (\titleposright,\titlepostop);
+    \fill[celeste] (\titleposleft,\titleposbottom) rectangle (\titleposright,\titleposbottom+5mm);
+}
+\usetitlestyle{Banda}
+
+\makeatletter
+\renewcommand\TP@maketitle{%
+    \centering
+    {\color{white}\bfseries\fontsize{80}{94}\selectfont \@title\par}
+    \vspace{10mm}
+    {\color{celeste}\fontsize{42}{52}\selectfont Identificación de la sobrestimación del Sharpe Ratio en estrategias
+     long-short con Random Forest validadas sin data leakage\par}
+    \vspace{12mm}
+    {\color{white}\bfseries\fontsize{38}{46}\selectfont \@author\par}
+    \vspace{6mm}
+    {\color{white!78!azuloscuro}\fontsize{30}{38}\selectfont \@institute\par}
+    \vspace{4mm}
+}
+\makeatother
+
+% ---------------------------------------------------------------- Bloques: título azul con una línea celeste debajo
+\defineblockstyle{Limpio}{
+    titlewidthscale=1, bodywidthscale=1, titleleft,
+    titleoffsetx=0pt, titleoffsety=0pt, bodyoffsetx=0pt, bodyoffsety=0pt,
+    bodyverticalshift=0pt, roundedcorners=0, linewidth=0pt,
+    titleinnersep=8mm, bodyinnersep=8mm
+}{
+    \ifBlockHasTitle
+        \fill[blocktitlebgcolor] ($(blocktitle.south west)+(\blocktitleinnersep,0)$)
+            rectangle ($(blocktitle.south east)+(-\blocktitleinnersep,2.5mm)$);
+    \fi
+}
+\useblockstyle{Limpio}
+
+% ---------------------------------------------------------------- Texto
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45em}
+% Texto alineado a la izquierda (en columnas angostas, el justificado abre demasiado los espacios). El cuerpo de los
+% bloques va en un \parbox, así que se agrega \RaggedRight adentro de \block.
+\usepackage{ragged2e}
+\setlength{\RaggedRightParindent}{0pt}
+% Espacios fijos alrededor de = y + en el texto (con \RaggedRight se estiraban), y sin cortes de línea después de ellos
+\AtBeginDocument{\thickmuskip=5mu\relax \medmuskip=4mu\relax \relpenalty=10000 \binoppenalty=10000}
+\makeatletter
+\expandafter\patchcmd\csname\string\block\endcsname{\large\color{blockbodyfgcolor}}
+    {\large\color{blockbodyfgcolor}\RaggedRight}{}{\PackageError{poster}{No se pudo parchear \string\block}{}}
+\makeatother
+\setlist[itemize]{leftmargin=1.1em, itemsep=0.35em, topsep=0.3em, parsep=0pt,
+                  label={\color{azul}\textbullet}}
+
+\newcommand{\SR}{\mathrm{SR}}
+\newcommand{\SRhat}{\widehat{\mathrm{SR}}}
+\newcommand{\destacado}[1]{%
+    \par\vspace{0.3em}\noindent
+    \colorbox{fondo}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\RaggedRight#1}}\par\vspace{0.3em}}
+\setlength{\fboxsep}{7mm}
+
+% Figura de ancho completo de la columna y su explicación, un poco más chica que el cuerpo
+\newcommand{\leyenda}{\fontsize{22}{27.5}\selectfont}
+\newcommand{\figura}[2]{%
+    \par\noindent\includegraphics[width=\linewidth]{#1}\par\vspace{3mm}
+    {\leyenda\color{gris}#2\par}}
+
+\tikzposterlatexaffectionproofoff  % sin el logo de tikzposter al pie
+
+% ---------------------------------------------------------------- Diagramas
+\tikzset{
+    entrenamiento/.style={fill=celeste!30},
+    test/.style={fill=celeste},
+    purga/.style={pattern={Lines[angle=45, distance=2.4mm, line width=0.7mm]}, pattern color=gris!70},
+    embargo/.style={fill=grisclaro!80},
+    holdout/.style={fill=azul},
+    muestra/.style={minimum width=9mm, minimum height=7mm, inner sep=0pt},
+}
+
+% Purged K-fold: una fila por split (6), con el fold de test, la purga, el embargo y el hold-out.
+% Eje x en años desde enero de 2006; la purga y el borde se dibujan con h = 6.
+\newcommand{\diagramacv}{%
+\begin{tikzpicture}[x=11mm, y=1mm, font=\normalsize]
+    \foreach \k in {0,...,5} {
+        \pgfmathsetmacro{\y}{-11*\k}
+        \pgfmathsetmacro{\ts}{2*\k}
+        \pgfmathsetmacro{\te}{2*\k+2}
+        \fill[entrenamiento] (0,\y) rectangle (12,\y-8);
+        \ifnum\k>0 \fill[white] (\ts-0.5,\y) rectangle (\ts,\y-8); \fill[purga] (\ts-0.5,\y) rectangle (\ts,\y-8); \fi
+        \ifnum\k<5
+            \fill[embargo] (\te,\y) rectangle (\te+1,\y-8);
+            \fill[white] (12-5/12,\y) rectangle (12,\y-8); \fill[purga] (12-5/12,\y) rectangle (12,\y-8);
+        \fi
+        \fill[test] (\ts,\y) rectangle (\te,\y-8);
+    }
+    \fill[holdout] (12.2,0) rectangle (20,-63);
+    \node[white, align=center, font=\large] at (16.1,-31.5) {\bfseries Hold-out\\[1mm]2018--2025\\[3mm]se evalúa\\una sola vez};
+    \foreach \a/\lab in {0/2006, 2/2008, 4/2010, 6/2012, 8/2014, 10/2016, 12.2/2018}
+        \node[above, gris, inner sep=1.5mm] at (\a,0) {\lab};
+    \draw[gris, line width=0.6mm] (0,-66) -- (0,-68.5) -- (12,-68.5) -- (12,-66);
+    \node[below, gris, inner sep=2mm] at (6,-68.5) {Desarrollo 2006--2017: 144 meses, 6 splits};
+    % Leyenda, en dos filas
+    \foreach \x/\yy/\estilo/\texto in {0/-84/entrenamiento/Entrenamiento, 10/-84/test/Test (validación),
+                                       0/-95/purga/Purga y borde ($h$ meses), 10/-95/embargo/Embargo (12 meses)} {
+        \fill[white] (\x,\yy) rectangle (\x+0.8,\yy-7);
+        \fill[\estilo] (\x,\yy) rectangle (\x+0.8,\yy-7);
+        \node[right, gris] at (\x+0.9,\yy-3.5) {\texto};
+    }
+\end{tikzpicture}}
+
+% CSCV: los 12 bloques anuales del desarrollo, 6 in-sample y 6 out-of-sample (una de las 924 particiones)
+\newcommand{\diagramacscv}{%
+\begin{tikzpicture}[x=1mm, y=1mm, font=\normalsize]
+    \foreach \i/\is in {0/1, 1/0, 2/1, 3/1, 4/0, 5/0, 6/1, 7/0, 8/1, 9/0, 10/0, 11/1} {
+        \pgfmathtruncatemacro{\anio}{6+\i}
+        \ifnum\is=1
+            \fill[celeste] (20*\i,0) rectangle (20*\i+17,-15);
+        \else
+            \draw[azul, line width=0.8mm, fill=white] (20*\i+0.4,-0.4) rectangle (20*\i+16.6,-14.6);
+        \fi
+        \node[text height=1.4ex, text depth=0pt] at (20*\i+8.5,-7.5) {\ifnum\anio<10 0\fi\anio};
+    }
+    \fill[celeste] (0,-22) rectangle (9,-29);
+    \node[right, gris] at (10,-25.5) {IS: se elige la campeona};
+    \draw[azul, line width=0.8mm, fill=white] (120.4,-22.4) rectangle (128.6,-28.6);
+    \node[right, gris] at (130,-25.5) {OOS: se mide su Sharpe Ratio};
+\end{tikzpicture}}
+
+% ---------------------------------------------------------------- Contenido
+\title{Sesgo de selección en estrategias de trading}
+\author{Juan Cruz Mendoza, Juan Ignacio Catania y Camila Rodríguez}
+\institute{Finanzas Cuantitativas \textperiodcentered{} Facultad de Ciencias Exactas y Naturales,
+           Universidad de Buenos Aires \textperiodcentered{} 2026}
+
+\begin{document}
+\maketitle
+
+\begin{columns}
+
+% ================================================================ Columna 1
+\column{0.333}
+
+\block{1. Introducción}{
+Al desarrollar una estrategia en el mundo de las finanzas cuantitativas, es muy habitual probar muchas variantes de la misma idea
+ y quedarse con la de mejor backtest. Aún si cada configuración se valida sin leakage, el máximo de
+muchas estimaciones ruidosas tiene un sesgo optimista: es el \textbf{sesgo de selección}, y la estrategia elegida
+suele tener una performance mucho peor out-of-sample.
+
+\destacado{\textbf{Objetivo:} mostrar lo fácil que es sobreajustar por sesgo de selección, aún cuando se
+controlan todas las fuentes de data leakage, y evaluar si el DSR, la CSCV y un hold-out permiten detectarlo y
+medirlo.}
+}
+
+\block{2.1 \,Datos y estrategia}{
+\begin{itemize}
+    \item \textbf{Universo:} las 40 empresas más grandes del S\&P~500 en 2005 (por volumen diario en dólares)
+          que siguieron cotizando hasta 2025, con precios diarios de cierre ajustados por dividendos y splits de yfinance.
+    \item \textbf{Features}: momentum 12-1, momentum 3 meses, reversión 1 mes, volatilidad
+          6 meses y tamaño (volumen en dólares de 12 meses).
+    \item \textbf{Target:} 1 si el retorno de la acción en los próximos $h$ meses está en el cuantil superior del
+          mes (tercil o quintil).
+    \item \textbf{Modelo base:} Random Forest de 200 árboles.
+    \item \textbf{Estrategia long-short:} cada $h$ meses se compran las acciones con mayor probabilidad predicha y
+          se venden en corto las de menor probabilidad (13 u 8 por pata), con pesos iguales.
+    \item \textbf{Costos:} 10bps por lado sobre el turnover de cada rebalanceo.
+    \item \textbf{Métrica:} Sharpe Ratio neto de costos, anualizado.
+\end{itemize}
+
+\vspace{0.4em}
+% Sin \extracolsep{\fill}: dentro de tikzposter, \fill es el comando de TikZ
+{\normalsize
+\begin{tabular*}{\linewidth}{@{\extracolsep{0pt plus 1fil}}llr@{}}
+    \toprule
+    \textbf{Dimensión} & \textbf{Valores} & \textbf{Opciones} \\
+    \midrule
+    Subconjunto de features & todas las combinaciones & 31 \\
+    Horizonte $h$ & 1, 3 y 6 meses & 3 \\
+    Cuantil del target & tercil, quintil & 2 \\
+    Profundidad máxima & 2, 4 y 8 & 3 \\
+    Mínimo de muestras por hoja & 1 y 50 & 2 \\
+    \midrule
+    \textbf{Configuraciones} & $31 \times 3 \times 2 \times 3 \times 2$ & \textbf{1116} \\
+    \bottomrule
+\end{tabular*}\par}
+
+\vspace{0.3em}
+Se elige la configuración de mayor Sharpe Ratio en la validación cruzada (CV).
+}
+
+\block{2.2 \,Validación sin leakage}{
+\diagramacv
+
+\vspace{0.2em}
+\begin{itemize}
+    \item \textbf{Purged K-fold} en la data de desarrollo (enero 2006 -- diciembre 2017), con $K = 6$ folds de 24 meses:
+          cada mes se predice con el modelo del split en el que es test. Así se arma una serie out-of-sample
+          de 144 meses por configuración.
+    \item \textbf{Purga:} se sacan del entrenamiento las muestras cuya etiqueta se solapa con el test ($h$ meses
+          antes) y las de 2017 cuya etiqueta mira 2018.
+    \item \textbf{Embargo:} 12 meses después del test, porque las features miran hasta 12 meses hacia atrás.
+    \item \textbf{Hold-out} (enero 2018 -- diciembre 2025): la elegida se reentrena con todo el desarrollo y se
+          evalúa una sola vez, al final. Las 1116 también se evalúan, solo para medir.
+\end{itemize}
+}
+
+% ================================================================ Columna 2
+\column{0.333}
+
+\block{2.3 \,Deflated Sharpe Ratio (DSR)}{
+Si las $N$ configuraciones fueran independientes y ninguna tuviera señal, sus Sharpe Ratio estimados serían
+aproximadamente normales, $\SRhat_n \sim \mathcal{N}(0, \sigma^2)$, y su máximo seguiría, para $N$ grande,
+aproximadamente una distribución de Gumbel. Su esperanza es el máximo esperado por azar:
+\[
+    \SR_0 = \sigma \left[ (1-\gamma)\, \Phi^{-1}\!\left(1-\frac{1}{N}\right)
+            + \gamma\, \Phi^{-1}\!\left(1-\frac{1}{N e}\right) \right],
+\]
+donde $\gamma \approx 0.577$ es la constante de Euler-Mascheroni. El DSR es la probabilidad de que el Sharpe Ratio
+verdadero de la elegida supere a $\SR_0$:
+\[
+    \mathrm{DSR} = \Phi\!\left( \frac{(\SRhat - \SR_0)\sqrt{T-1}}
+                   {\sqrt{1 - \hat\gamma_3\, \SRhat + \frac{\hat\gamma_4 - 1}{4}\, \SRhat^{2}}} \right),
+\]
+con la asimetría $\hat\gamma_3$ y la curtosis $\hat\gamma_4$ de los retornos y $T = 144$ meses. Como las
+configuraciones están correlacionadas ($\bar\rho = 0.58$), se usa el $N$ efectivo
+$N_{\mathrm{ef}} = \bar\rho + (1-\bar\rho)\, N = 464$, que da $\SR_0 = 0.70$ anualizado. La elegida es
+significativa si $\mathrm{DSR} > 0.95$.
+}
+
+\block{2.4 \,CSCV}{
+La Combinatorially Symmetric Cross-Validation parte los 144 meses de retornos fuera de muestra de las 1116
+configuraciones en 12 bloques anuales:
+
+\vspace{0.2em}
+\diagramacscv
+
+En cada una de las $\binom{12}{6} = 924$ formas de elegir 6 bloques in-sample (IS), se toma la configuración de
+mayor Sharpe Ratio IS (la campeona) y se mide su Sharpe Ratio en los otros 6 bloques (OOS). El promedio sobre las
+924 particiones es la \textbf{estimación CSCV}: estima lo que rinde fuera de muestra el procedimiento de elegir la
+mejor, no una configuración en particular. No reentrena modelos, así que no agrega leakage.
+}
+
+\block{3.1 \,La ventaja de la elegida no supera al máximo esperado por azar}{
+\figura{figuras/fig1_max_sharpe.pdf}{Para cada $n$ se sortean 1000 subconjuntos de $n$ configuraciones y se promedia
+su Sharpe Ratio CV máximo. La curva punteada es $\mu + \SR_0(n)$, con la media ($\mu = 0.17$) y el desvío
+($\sigma = 0.23$) de las 1116. Como suma la media, no mide si la elegida supera a cero, sino si supera al resto: la
+elegida (0.96) queda casi sobre la curva (0.93), así que su ventaja es la esperable por elegir el máximo de 1116
+estimaciones ruidosas.}
+}
+
+% ================================================================ Columna 3
+\column{0.333}
+
+\block{3.2 \,En el hold-out, la elegida cae y el promedio no}{
+\figura{figuras/fig2_elegida_vs_configuraciones.pdf}{La elegida cae de 0.96 a 0.53, mientras que el promedio de
+las 1116 queda en 0.17: toda la caída se debe a la selección. La estimación CSCV (0.40), calculada solo con la data de
+desarrollo, anticipó el hold-out mucho mejor que la CV. Aún así, la elegida quedó en el puesto 112 de 1116: lo que
+se infló fue la estimación, no la elección.}
+}
+
+\block{3.3 \,Aún sobrestimando la performance, la CV puede hacer un ranking de las estrategias out-of-sample}{
+\figura{figuras/fig3_deciles.pdf}{Configuraciones agrupadas en deciles según su Sharpe Ratio de validación (1: el
+10\,\% más bajo; 10: el 10\,\% más alto). La CV ordena, pero en las puntas los valores vuelven hacia el promedio:
+el decil superior cae de 0.60 a 0.44 y el inferior sube de $-0.22$ a $-0.06$. Es regresión a la media: cuanto más
+extremo es un Sharpe Ratio en la CV, más pesa el ruido.}
+}
+
+\block{3.4 \,Elegir por AUC no evita el problema}{
+\figura{figuras/fig4_sharpe_vs_auc.pdf}{En cada uno de los 6 grupos $(h, q)$, que comparten el target, se elige la
+mejor configuración por Sharpe Ratio y por AUC de la CV. El gráfico muestra, para cada criterio, el promedio de las 6
+elegidas. La elegida por AUC no tiene un sesgo optimista (0.32 → 0.31), dado que no se eligió mirando el Sharpe
+Ratio, pero rinde menos: la elegida por Sharpe Ratio se infla (0.75 → 0.51), pero la supera en el hold-out en 5 de
+los 6 grupos.}
+}
+
+\end{columns}
+
+\begin{columns}
+\column{0.5}
+\block{3.5 \,Resumen}{
+\begin{tabular*}{\linewidth}{@{\extracolsep{0pt plus 1fil}}lccc@{}}
+    \toprule
+    & \textbf{Sharpe Ratio CV} & \textbf{Sharpe Ratio hold-out} & \textbf{DSR} \\
+    & (2006--2017) & (2018--2025) & (CV) \\
+    \midrule
+    RF elegida por Sharpe Ratio & 0.96 & 0.53 & 0.80 \\
+    RF elegida por AUC & 0.56 & 0.35 & -- \\
+    Promedio de las 1116 configuraciones & 0.17 & 0.17 & -- \\
+    \bottomrule
+\end{tabular*}
+
+\vspace{0.6em}
+{\leyenda\color{gris}Sharpe Ratio anualizados y netos de costos. La elegida por AUC es la de mayor AUC de la CV
+(grupo $h = 6$, $q = 5$, el mismo de la elegida por Sharpe Ratio). El DSR solo está definido para la selección por
+Sharpe Ratio: 0.80 está debajo de 0.95, así que la elegida no es significativa.\par}
+
+% Referencias debajo de la tabla, en el espacio que deja la columna de las conclusiones (abajo no entran)
+\vspace{1.2em}
+{\small\color{gris}
+\textbf{Referencias.}
+Bailey, D. H. y López de Prado, M. (2014). The Deflated Sharpe Ratio: correcting for selection bias, backtest
+overfitting and non-normality. \textit{The Journal of Portfolio Management}, 40(5), 94--107. \quad
+Bailey, D. H., Borwein, J., López de Prado, M. y Zhu, Q. J. (2017). The probability of backtest overfitting.
+\textit{Journal of Computational Finance}, 20(4), 39--69. \quad
+López de Prado, M. (2018). \textit{Advances in Financial Machine Learning}. Wiley. \quad
+\textbf{Código:} github.com/JuanCruzMendoza/quant-selection-bias\par}
+}
+
+\column{0.5}
+\block{4. Conclusiones}{
+\begin{itemize}
+    \item \textbf{Sobreajustar por selección es fácil.} Con purged K-fold, embargo y un hold-out intacto, el
+          Sharpe Ratio de validación de la elegida (0.96) casi duplicó al del hold-out (0.53). Evitar el leakage no
+          alcanza: el sesgo crece con la cantidad de intentos.
+    \item \textbf{Las herramientas lo detectan, si se registra todo.} El DSR y la estimación CSCV anticiparon la
+          caída usando solo la data de desarrollo, pero necesitan conocer todos los intentos y sus retornos. Con una
+          metodología rigurosa, que fija el diseño de antemano, no lanza corridas sin un objetivo y guarda los
+          resultados y las métricas de cada una, podemos saber cuánto se “quemaron” los datos.
+    \item \textbf{Limitación:} survivorship bias. Las 40 acciones cotizaron durante todo 2005--2025,
+          así que quedan afuera las empresas que quebraron o fueron adquiridas.
+\end{itemize}
+}
+\end{columns}
+
+\end{document}

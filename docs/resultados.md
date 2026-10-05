@@ -1,6 +1,6 @@
 # Resultados
 
-Experimento de [plan.md](plan.md), implementado en [run_experiment.ipynb](run_experiment.ipynb). Se probaron 1116 configuraciones de Random Forest (subconjunto de features × h × cuantil × profundidad × hojas) con purged K-fold y embargo sobre 2006–2017, y se eligió la mejor por Sharpe Ratio de validación. Recién después se evaluó el hold-out 2018–2025, una sola vez (3 de octubre de 2026). El placebo no se corrió.
+Experimento de [plan.md](../plan.md), implementado en [run_experiment.ipynb](../run_experiment.ipynb). Se probaron 1116 configuraciones de Random Forest (subconjunto de features × h × cuantil × profundidad × hojas) con purged K-fold y embargo sobre 2006–2017, y se eligió la mejor por Sharpe Ratio de validación. Recién después se evaluó el hold-out 2018–2025, una sola vez (3 de octubre de 2026). El placebo no se corrió.
 
 En las figuras 7 a 10, el azul claro es validación (CV, 2006–2017) y el oscuro, hold-out (2018–2025). Todas las tablas y figuras están en `results/fa3e6998e744_full/`.
 
@@ -14,14 +14,14 @@ En las figuras 7 a 10, el azul claro es validación (CV, 2006–2017) y el oscur
 
 ## 1. Cuánto Sharpe Ratio da elegir la mejor
 
-![Figura 1](results/fa3e6998e744_full/fig1_max_sharpe_vs_n.png)
+![Figura 1](../results/fa3e6998e744_full/fig1_max_sharpe_vs_n.png)
 
 - El Sharpe Ratio máximo de la CV crece con la cantidad de configuraciones probadas, igual que el máximo esperable solo por la dispersión entre configuraciones (media + $SR_0(n)$). La elegida LS queda casi justo sobre esa curva: 0.96 contra 0.93.
 - El DSR no compara a la elegida contra 0, sino contra $SR_0$: el máximo que darían, sin señal, tantos intentos como el N efectivo de las 1116 configuraciones (464 en LS, con $SR_0$ = 0.70 anual). Contra esa vara, la elegida LS da DSR 0.80, debajo de 0.95. La long-only se evalúa contra 1/N, en su propia tabla al final.
 
 ## 2. La elegida en el hold-out
 
-![Figura 7](results/fa3e6998e744_full/fig7_cv_vs_heldout.png)
+![Figura 7](../results/fa3e6998e744_full/fig7_cv_vs_heldout.png)
 
 | Sharpe Ratio anualizado | LS | LO |
 |---|---:|---:|
@@ -38,11 +38,11 @@ En las figuras 7 a 10, el azul claro es validación (CV, 2006–2017) y el oscur
 - La estimación CSCV (el Sharpe Ratio fuera de muestra promedio de la campeona en cada partición) fue la mejor predicción del hold-out. Estima lo que rinde el procedimiento de elegir la mejor, no una configuración en particular. La CV sola sobrestimó el Sharpe Ratio de la elegida en 0.43 (LS) y 0.18 (LO).
 - La elegida igual quedó entre las mejores del hold-out. Elegir por la CV no la llevó a una configuración mala; lo que se infló fue la estimación.
 
-![Figura 5](results/fa3e6998e744_full/fig5_acumulado_heldout.png)
+![Figura 5](../results/fa3e6998e744_full/fig5_acumulado_heldout.png)
 
 ## 3. La CV ordena, pero las mejores están infladas
 
-![Figura 8](results/fa3e6998e744_full/fig8_deciles_cv_vs_heldout.png)
+![Figura 8](../results/fa3e6998e744_full/fig8_deciles_cv_vs_heldout.png)
 
 - El plan esperaba un Spearman cercano a 0 entre el ranking de la CV y el del hold-out. Dio 0.45 en LS y 0.40 en LO, así que la CV ordena algo. Los p-valores suponen configuraciones independientes, y no lo son.
 - Pero la mejora se achica justo arriba. El 10% mejor pasa de 0.60 a 0.44 en LS, y de 0.75 a 0.65 en LO. El 10% peor mejora: es regresión a la media, y cuanto más extremo es el valor en la CV, más vuelve hacia el promedio en el hold-out.
@@ -50,7 +50,7 @@ En las figuras 7 a 10, el azul claro es validación (CV, 2006–2017) y el oscur
 
 ## 4. La señal es `size`, y en parte es AAPL
 
-![Figura 9](results/fa3e6998e744_full/fig9_size.png)
+![Figura 9](../results/fa3e6998e744_full/fig9_size.png)
 
 - Sin `size`, el long-short no gana nada (0.02 en la CV y −0.03 en el hold-out), y el long-only queda debajo de 1/N (0.45 y 0.50, contra 0.63 y 0.69). Las que usan solo `size` mantienen el Sharpe Ratio en los dos períodos: 0.63 → 0.66 en LS y 0.76 → 0.73 en LO. El efecto persistió.
 - Las elegidas (LS y LO) usan `size` como única feature. En general, compran las acciones de menor volumen en dólares y venden las de mayor volumen (Spearman entre −0.4 y −0.6 entre la predicción y el rank de `size`), con una excepción fija: AAPL está en la pata larga en el 92% de los rebalanceos de la CV y en el 100% del hold-out. En el hold-out, MSFT también está en el 94%.
@@ -58,7 +58,7 @@ En las figuras 7 a 10, el azul claro es validación (CV, 2006–2017) y el oscur
 
 ## 5. Sharpe Ratio o AUC para elegir
 
-![Figura 10](results/fa3e6998e744_full/fig10_sharpe_vs_auc.png)
+![Figura 10](../results/fa3e6998e744_full/fig10_sharpe_vs_auc.png)
 
 - La elegida por AUC no se infla (0.32 → 0.31 en LS) porque no se eligió mirando el Sharpe Ratio, pero rinde menos.
 - La elegida por Sharpe Ratio se infla (0.75 → 0.51 en LS), pero rinde más en el hold-out en 11 de los 12 casos (6 grupos × LS/LO). La única excepción es h = 6, q = 3 en LS, donde las dos terminan cerca de 0.

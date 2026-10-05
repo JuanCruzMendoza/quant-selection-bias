@@ -4,3 +4,8 @@ __pycache__/
 cache/
 data/
 results/*_quick/
+# Archivos auxiliares de LaTeX del póster
+poster/*.aux
+poster/*.log
+poster/*.fls
+poster/*.fdb_latexmk
