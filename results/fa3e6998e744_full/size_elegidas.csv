@@ -1,0 +1,5 @@
+lado,periodo,config,spearman_pred_vs_size,long_mas_frecuentes,short_mas_frecuentes
+LS,val,m16_h6_q5_d2_l1,-0.5946469036622185,"AAPL 92%, AMAT 58%, MO 54%, TXN 54%, UNH 46%","INTC 71%, GE 71%, JPM 71%, PFE 58%, CSCO 54%"
+LS,ho,m16_h6_q5_d2_l1,-0.5964253940941446,"AAPL 100%, MSFT 94%, AIG 81%, HPQ 56%, MS 50%","INTC 94%, C 69%, QCOM 69%, JNJ 69%, HD 69%"
+LO,val,m16_h6_q5_d8_l1,-0.4100375234521576,"AAPL 92%, AMAT 54%, TXN 46%, HAL 46%, MSFT 42%",
+LO,ho,m16_h6_q5_d8_l1,-0.45497185741088186,"AAPL 100%, MSFT 94%, MSI 62%, MS 50%, HPQ 50%",
