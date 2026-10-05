@@ -58,7 +58,7 @@ La purged K-fold con embargo resuelve el **leakage**, pero no resuelve el **sesg
 - **Costos:** 10 bp por lado. En cada rebalanceo se cobra $0.001 \times \sum_i |w_i^{\text{nuevo}} - w_i^{\text{antes}}|$, donde $w^{\text{antes}}$ son los pesos derivados justo antes de rebalancear (en el primer rebalanceo se parte de cero). El turnover que se reporta es el promedio anual de $\sum_i |\Delta w_i|$.
 - **Sharpe:** media sobre desvío de los retornos mensuales **netos de costos**.
   - LO y baselines long-only: sobre el exceso respecto de la tasa libre de riesgo.
-  - LS y baseline de momentum: retorno directo, porque son autofinanciados.
+  - LS: retorno directo, porque es autofinanciado.
   - Para el DSR y la PBO se usa el Sharpe mensual sin anualizar. Para reportar se anualiza ($\times\sqrt{12}$).
 
 ## Grilla de configuraciones (los N intentos)
@@ -156,12 +156,11 @@ donde $\gamma \approx 0.5772$ es la constante de Euler-Mascheroni y $\hat\gamma_
 
 ## Baselines (un solo intento cada uno, sin búsqueda)
 
-| Baseline                                        | Compara contra |
-| ----------------------------------------------- | -------------- |
-| 1/N (pesos iguales en las 40 acciones)          | RF long-only   |
-| Risk parity inverse-vol (volatilidad de 6m)     | RF long-only   |
-| SPY buy & hold                                  | referencia     |
-| Momentum 12-1 por terciles (regla fija, sin ML) | RF long-short  |
+| Baseline                                    | Compara contra |
+| ------------------------------------------- | -------------- |
+| 1/N (pesos iguales en las 40 acciones)      | RF long-only   |
+| Risk parity inverse-vol (volatilidad de 6m) | RF long-only   |
+| SPY buy & hold                              | referencia     |
 
 - Se rebalancean **trimestralmente** desde enero de 2006 (desde enero de 2018 en el hold-out), y eso queda fijado de antemano. El $h$ del RF cambia según la configuración, y elegir el rebalanceo de los baselines después de ver resultados sería otro intento escondido.
 - La volatilidad del risk parity es la misma que la de la feature (retornos diarios de los últimos 6 meses), con pesos proporcionales a $1/\sigma_i$.
@@ -171,7 +170,7 @@ donde $\gamma \approx 0.5772$ es la constante de Euler-Mascheroni y $\hat\gamma_
 ## Entregables
 
 1. Curva del máximo Sharpe CV en función de N: datos reales, placebo y $SR_0$ teórico.
-2. Tabla principal para la elegida por Sharpe (LS y LO), la elegida por information ratio contra 1/N, los baselines y, como referencia, el Sharpe promedio de las 1116 configuraciones. Columnas: Sharpe en train y en hold-out (anualizados), DSR (train), PSR (hold-out), PBO (solo para los procedimientos de selección), máxima caída, turnover y, para los long-only, information ratio contra 1/N.
+2. Tabla principal, todo en Sharpe, para la elegida por Sharpe (LS y LO), los baselines y, como referencia, el Sharpe promedio de las 1116 configuraciones. Columnas: Sharpe en train y en hold-out (anualizados), DSR (train), PSR (hold-out), PBO (solo para los procedimientos de selección), máxima caída y turnover. El long-only contra 1/N va en una tabla aparte, todo en information ratio, para no mezclar IR con Sharpe: la elegida por IR (con su DSR y su PBO), el promedio de las configuraciones y los baselines.
 3. Tabla de comparación de criterios: por grupo (h, cuantil) y por LS/LO, la elegida por Sharpe contra la elegida por AUC, con Sharpe CV, Sharpe en hold-out, caída y PBO de cada criterio.
 4. Scatter del ranking de CV contra el ranking en hold-out, con su Spearman.
 5. Retornos acumulados en el hold-out: RF elegido contra baselines.
