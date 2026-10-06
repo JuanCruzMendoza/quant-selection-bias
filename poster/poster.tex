@@ -65,7 +65,7 @@
     {\color{white}\bfseries\fontsize{80}{94}\selectfont \@title\par}
     \vspace{10mm}
     {\color{celeste}\fontsize{42}{52}\selectfont Identificación de la sobrestimación del Sharpe Ratio en estrategias
-     long-short con Random Forest validadas sin data leakage\par}
+     long-short sin data leakage\par}
     \vspace{12mm}
     {\color{white}\bfseries\fontsize{38}{46}\selectfont \@author\par}
     \vspace{6mm}
@@ -97,9 +97,11 @@
 \setlength{\RaggedRightParindent}{0pt}
 % Espacios fijos alrededor de = y + en el texto (con \RaggedRight se estiraban), y sin cortes de línea después de ellos
 \AtBeginDocument{\thickmuskip=5mu\relax \medmuskip=4mu\relax \relpenalty=10000 \binoppenalty=10000}
+% Tamaño del texto de los bloques: tikzposter usa \large (24.9 pt); se agranda un poco para leerlo de más lejos
+\newcommand{\cuerpo}{\fontsize{28.5}{34}\selectfont}
 \makeatletter
 \expandafter\patchcmd\csname\string\block\endcsname{\large\color{blockbodyfgcolor}}
-    {\large\color{blockbodyfgcolor}\RaggedRight}{}{\PackageError{poster}{No se pudo parchear \string\block}{}}
+    {\cuerpo\color{blockbodyfgcolor}\RaggedRight}{}{\PackageError{poster}{No se pudo parchear \string\block}{}}
 \makeatother
 \setlist[itemize]{leftmargin=1.1em, itemsep=0.35em, topsep=0.3em, parsep=0pt,
                   label={\color{azul}\textbullet}}
@@ -112,7 +114,7 @@
 \setlength{\fboxsep}{7mm}
 
 % Figura de ancho completo de la columna y su explicación, un poco más chica que el cuerpo
-\newcommand{\leyenda}{\fontsize{22}{27.5}\selectfont}
+\newcommand{\leyenda}{\fontsize{25}{30.5}\selectfont}
 \newcommand{\figura}[2]{%
     \par\noindent\includegraphics[width=\linewidth]{#1}\par\vspace{3mm}
     {\leyenda\color{gris}#2\par}}
@@ -181,7 +183,7 @@
 % ---------------------------------------------------------------- Contenido
 \title{Sesgo de selección en estrategias de trading}
 \author{Juan Cruz Mendoza, Juan Ignacio Catania y Camila Rodríguez}
-\institute{Finanzas Cuantitativas \textperiodcentered{} Facultad de Ciencias Exactas y Naturales,
+\institute{Facultad de Ciencias Exactas y Naturales,
            Universidad de Buenos Aires \textperiodcentered{} 2026}
 
 \begin{document}
@@ -193,34 +195,33 @@
 \column{0.333}
 
 \block{1. Introducción}{
-Al desarrollar una estrategia en el mundo de las finanzas cuantitativas, es muy habitual probar muchas variantes de la misma idea
- y quedarse con la de mejor backtest. Aún si cada configuración se valida sin leakage, el máximo de
-muchas estimaciones ruidosas tiene un sesgo optimista: es el \textbf{sesgo de selección}, y la estrategia elegida
-suele tener una performance mucho peor out-of-sample.
+Al desarrollar una estrategia en el mundo de las finanzas cuantitativas, es muy habitual probar muchas
+variantes de la misma idea y quedarse con la de mejor backtest. Aunque cada configuración se valide sin leakage, el
+máximo de muchas estimaciones ruidosas tiene un \textbf{sesgo de selección}, y la elegida suele
+rendir mucho peor out-of-sample. 
 
-\destacado{\textbf{Objetivo:} mostrar lo fácil que es sobreajustar por sesgo de selección, aún cuando se
-controlan todas las fuentes de data leakage, y evaluar si el DSR, la CSCV y un hold-out permiten detectarlo y
-medirlo.}
+\textbf{Objetivo:} mostrar lo fácil que es sobreajustar por este sesgo y evaluar si
+el DSR, la CSCV y un hold-out permiten detectarlo y medirlo.
 }
 
 \block{2.1 \,Datos y estrategia}{
 \begin{itemize}
-    \item \textbf{Universo:} las 40 empresas más grandes del S\&P~500 en 2005 (por volumen diario en dólares)
-          que siguieron cotizando hasta 2025, con precios diarios de cierre ajustados por dividendos y splits de yfinance.
+    \item \textbf{Universo:} las 40 empresas más grandes del S\&P~500 en 2005
+          que siguieron cotizando hasta 2025, con precios diarios.
     \item \textbf{Features}: momentum 12-1, momentum 3 meses, reversión 1 mes, volatilidad
           6 meses y tamaño (volumen en dólares de 12 meses).
     \item \textbf{Target:} 1 si el retorno de la acción en los próximos $h$ meses está en el cuantil superior del
           mes (tercil o quintil).
     \item \textbf{Modelo base:} Random Forest de 200 árboles.
     \item \textbf{Estrategia long-short:} cada $h$ meses se compran las acciones con mayor probabilidad predicha y
-          se venden en corto las de menor probabilidad (13 u 8 por pata), con pesos iguales.
+          se hace un short con las de menor probabilidad, con pesos iguales.
     \item \textbf{Costos:} 10bps por lado sobre el turnover de cada rebalanceo.
     \item \textbf{Métrica:} Sharpe Ratio neto de costos, anualizado.
 \end{itemize}
 
 \vspace{0.4em}
 % Sin \extracolsep{\fill}: dentro de tikzposter, \fill es el comando de TikZ
-{\normalsize
+{\fontsize{22}{26.5}\selectfont
 \begin{tabular*}{\linewidth}{@{\extracolsep{0pt plus 1fil}}llr@{}}
     \toprule
     \textbf{Dimensión} & \textbf{Valores} & \textbf{Opciones} \\
@@ -244,14 +245,10 @@ Se elige la configuración de mayor Sharpe Ratio en la validación cruzada (CV).
 
 \vspace{0.2em}
 \begin{itemize}
-    \item \textbf{Purged K-fold} en la data de desarrollo (enero 2006 -- diciembre 2017), con $K = 6$ folds de 24 meses:
-          cada mes se predice con el modelo del split en el que es test. Así se arma una serie out-of-sample
-          de 144 meses por configuración.
-    \item \textbf{Purga:} se sacan del entrenamiento las muestras cuya etiqueta se solapa con el test ($h$ meses
-          antes) y las de 2017 cuya etiqueta mira 2018.
-    \item \textbf{Embargo:} 12 meses después del test, porque las features miran hasta 12 meses hacia atrás.
-    \item \textbf{Hold-out} (enero 2018 -- diciembre 2025): la elegida se reentrena con todo el desarrollo y se
-          evalúa una sola vez, al final. Las 1116 también se evalúan, solo para medir.
+    \item \textbf{Purged K-fold} ($K = 6$) en el desarrollo: una serie out-of-sample de 144 meses por configuración.
+    \item \textbf{Purga:} sin muestras cuya etiqueta se solape con el test o con el hold-out.
+    \item \textbf{Embargo:} 12 meses después del test, porque las features miran 12 meses hacia atrás.
+    \item \textbf{Hold-out:} la elegida se evalúa una sola vez, al final (las 1116 también, solo para medir).
 \end{itemize}
 }
 
@@ -259,69 +256,55 @@ Se elige la configuración de mayor Sharpe Ratio en la validación cruzada (CV).
 \column{0.333}
 
 \block{2.3 \,Deflated Sharpe Ratio (DSR)}{
-Si las $N$ configuraciones fueran independientes y ninguna tuviera señal, sus Sharpe Ratio estimados serían
-aproximadamente normales, $\SRhat_n \sim \mathcal{N}(0, \sigma^2)$, y su máximo seguiría, para $N$ grande,
+Si las $N$ configuraciones fueran independientes y ninguna tuviera señal, sus Sharpe Ratio serían
+aproximadamente normales, $\SRhat_n \sim \mathcal{N}(0, \sigma^2)$, y su máximo seguiría 
 aproximadamente una distribución de Gumbel. Su esperanza es el máximo esperado por azar:
 \[
     \SR_0 = \sigma \left[ (1-\gamma)\, \Phi^{-1}\!\left(1-\frac{1}{N}\right)
             + \gamma\, \Phi^{-1}\!\left(1-\frac{1}{N e}\right) \right],
 \]
-donde $\gamma \approx 0.577$ es la constante de Euler-Mascheroni. El DSR es la probabilidad de que el Sharpe Ratio
-verdadero de la elegida supere a $\SR_0$:
-\[
-    \mathrm{DSR} = \Phi\!\left( \frac{(\SRhat - \SR_0)\sqrt{T-1}}
-                   {\sqrt{1 - \hat\gamma_3\, \SRhat + \frac{\hat\gamma_4 - 1}{4}\, \SRhat^{2}}} \right),
-\]
-con la asimetría $\hat\gamma_3$ y la curtosis $\hat\gamma_4$ de los retornos y $T = 144$ meses. Como las
+El DSR es la probabilidad de que el Sharpe Ratio
+verdadero de la elegida supere a $\SR_0$, corrigiendo por la asimetría, la curtosis y el largo de la serie. Como las
 configuraciones están correlacionadas ($\bar\rho = 0.58$), se usa el $N$ efectivo
-$N_{\mathrm{ef}} = \bar\rho + (1-\bar\rho)\, N = 464$, que da $\SR_0 = 0.70$ anualizado. La elegida es
+$N_{\mathrm{ef}} = \bar\rho + (1-\bar\rho)\, N$, que da $\SR_0 = 0.70$. La elegida es
 significativa si $\mathrm{DSR} > 0.95$.
 }
 
 \block{2.4 \,CSCV}{
-La Combinatorially Symmetric Cross-Validation parte los 144 meses de retornos fuera de muestra de las 1116
+La Combinatorially Symmetric Cross-Validation parte los 144 meses de retornos out-of-sample de las 1116
 configuraciones en 12 bloques anuales:
 
 \vspace{0.2em}
 \diagramacscv
 
-En cada una de las $\binom{12}{6} = 924$ formas de elegir 6 bloques in-sample (IS), se toma la configuración de
+En cada una de las formas de elegir 6 bloques in-sample (IS), se toma la configuración de
 mayor Sharpe Ratio IS (la campeona) y se mide su Sharpe Ratio en los otros 6 bloques (OOS). El promedio sobre las
-924 particiones es la \textbf{estimación CSCV}: estima lo que rinde fuera de muestra el procedimiento de elegir la
-mejor, no una configuración en particular. No reentrena modelos, así que no agrega leakage.
+particiones es la \textbf{estimación CSCV}: estima lo que rinde out-of-sample el procedimiento de elegir la
+mejor.
 }
 
 \block{3.1 \,La ventaja de la elegida no supera al máximo esperado por azar}{
-\figura{figuras/fig1_max_sharpe.pdf}{Para cada $n$ se sortean 1000 subconjuntos de $n$ configuraciones y se promedia
-su Sharpe Ratio CV máximo. La curva punteada es $\mu + \SR_0(n)$, con la media ($\mu = 0.17$) y el desvío
-($\sigma = 0.23$) de las 1116. Como suma la media, no mide si la elegida supera a cero, sino si supera al resto: la
-elegida (0.96) queda casi sobre la curva (0.93), así que su ventaja es la esperable por elegir el máximo de 1116
-estimaciones ruidosas.}
+\figura{figuras/fig1_max_sharpe.pdf}{Sharpe Ratio CV máximo entre $n$ configuraciones sorteadas (promedio de 1000
+sorteos). Se mide si la elegida supera en SR al resto.}
 }
 
 % ================================================================ Columna 3
 \column{0.333}
 
 \block{3.2 \,En el hold-out, la elegida cae y el promedio no}{
-\figura{figuras/fig2_elegida_vs_configuraciones.pdf}{La elegida cae de 0.96 a 0.53, mientras que el promedio de
-las 1116 queda en 0.17: toda la caída se debe a la selección. La estimación CSCV (0.40), calculada solo con la data de
-desarrollo, anticipó el hold-out mucho mejor que la CV. Aún así, la elegida quedó en el puesto 112 de 1116: lo que
-se infló fue la estimación, no la elección.}
+\figura{figuras/fig2_elegida_vs_configuraciones.pdf}{La elegida cae de 0.96 a 0.53 y el promedio no se mueve: la
+caída se debe a la selección. La estimación CSCV (0.40) anticipó la caída.}
 }
 
-\block{3.3 \,Aún sobrestimando la performance, la CV puede hacer un ranking de las estrategias out-of-sample}{
-\figura{figuras/fig3_deciles.pdf}{Configuraciones agrupadas en deciles según su Sharpe Ratio de validación (1: el
-10\,\% más bajo; 10: el 10\,\% más alto). La CV ordena, pero en las puntas los valores vuelven hacia el promedio:
-el decil superior cae de 0.60 a 0.44 y el inferior sube de $-0.22$ a $-0.06$. Es regresión a la media: cuanto más
-extremo es un Sharpe Ratio en la CV, más pesa el ruido.}
+\block{3.3 \,La CV ordena, pero sobrestima a las mejores}{
+\figura{figuras/fig3_deciles.pdf}{Decil 1 es el 10\,\% más bajo, decil 10 es el
+10\,\% más alto. En las puntas, los valores vuelven hacia el promedio: es regresión a la media, porque en los
+extremos pesa más el ruido.}
 }
 
 \block{3.4 \,Elegir por AUC no evita el problema}{
-\figura{figuras/fig4_sharpe_vs_auc.pdf}{En cada uno de los 6 grupos $(h, q)$, que comparten el target, se elige la
-mejor configuración por Sharpe Ratio y por AUC de la CV. El gráfico muestra, para cada criterio, el promedio de las 6
-elegidas. La elegida por AUC no tiene un sesgo optimista (0.32 → 0.31), dado que no se eligió mirando el Sharpe
-Ratio, pero rinde menos: la elegida por Sharpe Ratio se infla (0.75 → 0.51), pero la supera en el hold-out en 5 de
-los 6 grupos.}
+\figura{figuras/fig4_sharpe_vs_auc.pdf}{En cada grupo $(h, q)$ se elige la mejor por Sharpe Ratio y la mejor por AUC
+de la CV: el gráfico muestra el promedio de los 6 grupos. Elegir por AUC evita el sesgo optimista, pero rinde menos.}
 }
 
 \end{columns}
@@ -329,6 +312,7 @@ los 6 grupos.}
 \begin{columns}
 \column{0.5}
 \block{3.5 \,Resumen}{
+\leyenda  % la tabla, al tamaño de las leyendas: con el del cuerpo, los encabezados quedan pegados
 \begin{tabular*}{\linewidth}{@{\extracolsep{0pt plus 1fil}}lccc@{}}
     \toprule
     & \textbf{Sharpe Ratio CV} & \textbf{Sharpe Ratio hold-out} & \textbf{DSR} \\
@@ -341,9 +325,8 @@ los 6 grupos.}
 \end{tabular*}
 
 \vspace{0.6em}
-{\leyenda\color{gris}Sharpe Ratio anualizados y netos de costos. La elegida por AUC es la de mayor AUC de la CV
-(grupo $h = 6$, $q = 5$, el mismo de la elegida por Sharpe Ratio). El DSR solo está definido para la selección por
-Sharpe Ratio: 0.80 está debajo de 0.95, así que la elegida no es significativa.\par}
+{\leyenda\color{gris}La elegida por AUC es la de mayor AUC de la CV (grupo $h = 6$, $q = 5$, el mismo de la elegida
+por Sharpe Ratio).\par}
 
 % Referencias debajo de la tabla, en el espacio que deja la columna de las conclusiones (abajo no entran)
 \vspace{1.2em}
@@ -353,8 +336,11 @@ Bailey, D. H. y López de Prado, M. (2014). The Deflated Sharpe Ratio: correctin
 overfitting and non-normality. \textit{The Journal of Portfolio Management}, 40(5), 94--107. \quad
 Bailey, D. H., Borwein, J., López de Prado, M. y Zhu, Q. J. (2017). The probability of backtest overfitting.
 \textit{Journal of Computational Finance}, 20(4), 39--69. \quad
-López de Prado, M. (2018). \textit{Advances in Financial Machine Learning}. Wiley. \quad
-\textbf{Código:} github.com/JuanCruzMendoza/quant-selection-bias\par}
+López de Prado, M. (2018). \textit{Advances in Financial Machine Learning}. Wiley.\par}
+
+% El link al código, en su propia línea y más grande que las referencias
+\vspace{0.8em}
+{\leyenda\textbf{Código:} {\color{azul}github.com/JuanCruzMendoza/quant-selection-bias}\par}
 }
 
 \column{0.5}
@@ -365,8 +351,7 @@ López de Prado, M. (2018). \textit{Advances in Financial Machine Learning}. Wil
           alcanza: el sesgo crece con la cantidad de intentos.
     \item \textbf{Las herramientas lo detectan, si se registra todo.} El DSR y la estimación CSCV anticiparon la
           caída usando solo la data de desarrollo, pero necesitan conocer todos los intentos y sus retornos. Con una
-          metodología rigurosa, que fija el diseño de antemano, no lanza corridas sin un objetivo y guarda los
-          resultados y las métricas de cada una, podemos saber cuánto se “quemaron” los datos.
+          metodología rigurosa que guarda todas las corridas, podemos saber cuánto se “quemaron” los datos.
     \item \textbf{Limitación:} survivorship bias. Las 40 acciones cotizaron durante todo 2005--2025,
           así que quedan afuera las empresas que quebraron o fueron adquiridas.
 \end{itemize}
