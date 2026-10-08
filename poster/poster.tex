@@ -166,13 +166,13 @@
 \newcommand{\diagramacscv}{%
 \begin{tikzpicture}[x=1mm, y=1mm, font=\normalsize]
     \foreach \i/\is in {0/1, 1/0, 2/1, 3/1, 4/0, 5/0, 6/1, 7/0, 8/1, 9/0, 10/0, 11/1} {
-        \pgfmathtruncatemacro{\anio}{6+\i}
+        \pgfmathtruncatemacro{\bloque}{1+\i}
         \ifnum\is=1
             \fill[celeste] (20*\i,0) rectangle (20*\i+17,-15);
         \else
             \draw[azul, line width=0.8mm, fill=white] (20*\i+0.4,-0.4) rectangle (20*\i+16.6,-14.6);
         \fi
-        \node[text height=1.4ex, text depth=0pt] at (20*\i+8.5,-7.5) {\ifnum\anio<10 0\fi\anio};
+        \node[text height=1.4ex, text depth=0pt] at (20*\i+8.5,-7.5) {\bloque};
     }
     \fill[celeste] (0,-22) rectangle (9,-29);
     \node[right, gris] at (10,-25.5) {IS: se elige la campeona};
@@ -195,10 +195,12 @@
 \column{0.333}
 
 \block{1. Introducción}{
-Al desarrollar una estrategia en el mundo de las finanzas cuantitativas, es muy habitual probar muchas
-variantes de la misma idea y quedarse con la de mejor backtest. Aunque cada configuración se valide sin leakage, el
-máximo de muchas estimaciones ruidosas tiene un \textbf{sesgo de selección}, y la elegida suele
+Al desarrollar una estrategia, es habitual probar muchas
+variantes de la misma idea y quedarse con la de mejor backtest. Aunque se valide sin data leakage, el
+máximo de muchas estimaciones tiene un \textbf{sesgo de selección}, y suele
 rendir mucho peor out-of-sample. 
+
+\vspace{0.3em}
 
 \textbf{Objetivo:} mostrar lo fácil que es sobreajustar por este sesgo y evaluar si
 el DSR, la CSCV y un hold-out permiten detectarlo y medirlo.
@@ -206,8 +208,7 @@ el DSR, la CSCV y un hold-out permiten detectarlo y medirlo.
 
 \block{2.1 \,Datos y estrategia}{
 \begin{itemize}
-    \item \textbf{Universo:} las 40 empresas más grandes del S\&P~500 en 2005
-          que siguieron cotizando hasta 2025, con precios diarios.
+    \item \textbf{Universo:} las 40 empresas más grandes del S\&P~500 en 2005, con precios diarios.
     \item \textbf{Features}: momentum 12-1, momentum 3 meses, reversión 1 mes, volatilidad
           6 meses y tamaño (volumen en dólares de 12 meses).
     \item \textbf{Target:} 1 si el retorno de la acción en los próximos $h$ meses está en el cuantil superior del
@@ -237,7 +238,7 @@ el DSR, la CSCV y un hold-out permiten detectarlo y medirlo.
 \end{tabular*}\par}
 
 \vspace{0.3em}
-Se elige la configuración de mayor Sharpe Ratio en la validación cruzada (CV).
+
 }
 
 \block{2.2 \,Validación sin leakage}{
@@ -257,30 +258,38 @@ Se elige la configuración de mayor Sharpe Ratio en la validación cruzada (CV).
 
 \block{2.3 \,Deflated Sharpe Ratio (DSR)}{
 Si las $N$ configuraciones fueran independientes y ninguna tuviera señal, sus Sharpe Ratio serían
-aproximadamente normales, $\SRhat_n \sim \mathcal{N}(0, \sigma^2)$, y su máximo seguiría 
-aproximadamente una distribución de Gumbel. Su esperanza es el máximo esperado por azar:
-\[
-    \SR_0 = \sigma \left[ (1-\gamma)\, \Phi^{-1}\!\left(1-\frac{1}{N}\right)
-            + \gamma\, \Phi^{-1}\!\left(1-\frac{1}{N e}\right) \right],
-\]
-El DSR es la probabilidad de que el Sharpe Ratio
-verdadero de la elegida supere a $\SR_0$, corrigiendo por la asimetría, la curtosis y el largo de la serie. Como las
-configuraciones están correlacionadas ($\bar\rho = 0.58$), se usa el $N$ efectivo
-$N_{\mathrm{ef}} = \bar\rho + (1-\bar\rho)\, N$, que da $\SR_0 = 0.70$. La elegida es
-significativa si $\mathrm{DSR} > 0.95$.
+aproximadamente normales, $\SRhat_n \sim \mathcal{N}(0, \sigma^2)$, y su máximo seguiría una distribución de Gumbel. 
+
+\vspace{0.3em}
+
+Su esperanza \textbf{$SR_0$ es el máximo esperado por azar.}
+
+\vspace{0.3em}
+
+\textbf{DSR}: probabilidad de que el SR
+verdadero de la elegida supere a $\SR_0$, y es significativa si $\mathrm{DSR} > 0.95$.
+
+\vspace{0.3em}
+
+Después de corregir por la correlación de las configuraciones: \textbf{$\SR_0 = 0.70$}. 
+
 }
 
 \block{2.4 \,CSCV}{
-La Combinatorially Symmetric Cross-Validation parte los 144 meses de retornos out-of-sample de las 1116
-configuraciones en 12 bloques anuales:
+La Combinatorially Symmetric Cross-Validation estima lo que rinde out-of-sample el procedimiento de elegir la
+mejor.
 
 \vspace{0.2em}
 \diagramacscv
 
-En cada una de las formas de elegir 6 bloques in-sample (IS), se toma la configuración de
-mayor Sharpe Ratio IS (la campeona) y se mide su Sharpe Ratio en los otros 6 bloques (OOS). El promedio sobre las
-particiones es la \textbf{estimación CSCV}: estima lo que rinde out-of-sample el procedimiento de elegir la
-mejor.
+Toma los retornos out-of-sample de todas las configuraciones y los parte en 12 bloques anuales.
+Para cada una de las formas de elegir 6 bloques in-sample (IS), se toma la configuración de
+mayor SR y se mide su SR en los otros 6 bloques (OOS). 
+
+\vspace{0.3em}
+
+\textbf{Estimación CSCV} = promedio del SR OOS de todas las particiones
+
 }
 
 \block{3.1 \,La ventaja de la elegida no supera al máximo esperado por azar}{
